@@ -6,10 +6,10 @@
 
 ```bash
 git clone https://github.com/abramovmarketing88-byte/cursor-skills.git
-cp -r cursor-skills/landing-audit cursor-skills/ui-design-review cursor-skills/selling-landing ~/.cursor/skills/
+cp -r cursor-skills/landing-audit cursor-skills/ui-design-review cursor-skills/selling-landing cursor-skills/avito-factory ~/.cursor/skills/
 ```
 
-В Agent: `/landing-audit`, `/ui-design-review` или `/selling-landing`.
+В Agent: `/landing-audit`, `/ui-design-review`, `/selling-landing` или `/avito-factory`.
 
 ## Skills
 
@@ -24,4 +24,8 @@ cp -r cursor-skills/landing-audit cursor-skills/ui-design-review cursor-skills/s
 ### [selling-landing](./selling-landing/)
 
 Создание продающего лендинга по 12-этапному процессу: ЦА, конкуренты, оффер, структура, копирайт, дизайн, вёрстка.
+
+### [avito-factory](./avito-factory/)
+
+Полный пайплайн массовых объявлений для Авито: бриф → ЦА → креативы → объявления → аудит → спинтекст → CSV (Title, Description, Address). Примеры выходов, скрипты, пресеты гео, промпты для обложек.
 
