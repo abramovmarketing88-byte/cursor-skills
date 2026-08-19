@@ -1,111 +1,150 @@
 ---
 name: ai-seller-master
-description: Analyze sales chats, logs, PDFs, screenshots, and business notes, then design or refactor a production AI seller skill with prompt, files map, source-of-truth docs, Direct Questions, tables, and CRM handoff rules. Use when creating, auditing, universalizing, or fixing Avito/Suvvy seller bots, marketplace sales prompts, anti-hallucination knowledge packs, or business-specific seller skills.
+description: Analyze Avito/Suvvy seller chats, logs, PDFs, screenshots, and business notes, then design or refactor a production AI seller skill with Instructions, files-map, source-of-truth docs, Direct Questions (get_file_text), tables, CRM/Bitrix handoff, qualification, anti-hallucination bans, and deploy checklist. Use when creating, auditing, universalizing, or fixing marketplace sales bots on Suvvy.ai.
 disable-model-invocation: true
 ---
 
 # AI Seller Master
 
-Единый мастер-скилл для ИИ-продавцов: анализ вводных → ТЗ → production-скилл (`prompt.md`, `files-map.md`, `sources/*`, `suvvy-qa/*`).
+Единый мастер: **анализ → ТЗ → production-скилл → деплой в Suvvy**.  
+Нишевые факты (цены, адрес, SKU) живут в `sources/*` конкретного бота. Здесь — **универсальная логика**, проверенная на Avito + Suvvy (камень, бухгалтерия и разборы живых чатов).
 
-## Что делает
+Перед работой прочитай нужные справочники:
 
-1. Разбирает переписки, логи, PDF, скриншоты, заметки.
-2. Собирает ТЗ (квалификация, цены, CRM, запреты).
-3. Собирает или чинит production-скилл без галлюцинаций.
-4. Чинит повторяющиеся провалы живых чатов явными банами и сценариями.
+- [suvvy-platform.md](references/suvvy-platform.md) — платформа Suvvy
+- [seller-logic.md](references/seller-logic.md) — диалог, квалификация, CRM
+- [prompt-pack.md](references/prompt-pack.md) — структура файлов и синхронизация
+- [failure-patterns.md](references/failure-patterns.md) — живые провалы → баны
+- [brief-template.md](references/brief-template.md) — шаблон ТЗ
 
-## Когда использовать
+## Когда включать
 
-Анализ переписок, ТЗ для бота, промпт Suvvy, карта файлов, Direct Questions, CRM/Bitrix, правка существующего seller-скилла.
+Переписки Авито, логи бота, PDF/скрины, «почему не находит в таблице», промпт Suvvy, Direct Questions, Bitrix/воронка, квалификация, телефон, chat-only, антигаллюцинации.
 
-## Workflow
+## Жёсткое правило источника правды
 
-### Phase 1 — Discovery
+Бот (и ты при правке промпта) отвечает **только** из:
 
-Извлечь: бизнес и канал, товары/услуги, интенты, квалификацию, цены, источники данных, CRM/handoff, запреты, повторяющиеся сбои.
+1. Instructions (`prompt.md` / `prompt-suvvy-paste.md`)
+2. Direct Questions через `get_file_text("Exact Title")` — заголовок **байт-в-байт**
+3. Табличные функции (CSV)
+4. Явные факты клиента **во всей** переписке
+5. Публичные каталожные ссылки компании (навигация, не выдуманные цены)
 
-Группировать сбои: логика, пробелы в знаниях, приоритеты, тон/UX, интеграции.
+Нет в источниках → не выдумывать → эскалация менеджеру. Клиенту **не** писать «не найден в базе».
 
-### Phase 2 — Architecture
+---
+
+## Phase 1 — Discovery
+
+Прочитать **все** вложения: чаты, скрины, PDF (включая картинки), TXT, текущий промпт, таблицы.
+
+Разделить: **CONFIRMED** / **INFERRED** / **TODO**.
+
+Снять:
+
+| Блок | Что извлечь |
+|------|-------------|
+| Бизнес | роль, канал (Avito), продукт vs услуга, out of scope |
+| Интенты | цена, наличие, «где посмотреть», услуга, «дорого», только чат |
+| Квалификация | large / medium / small **внутри**; клиенту ярлыки не говорить |
+| Цены | изделие/услуга «от» vs материал/м²; что входит |
+| Данные | таблица, прайс, адрес, каталог |
+| CRM | когда двигать стадию, один раз за диалог, после вызова **продолжать чат** |
+| Провалы | телефон вместо ответа, дубли, тишина, повтор номера, пропуск таблицы |
+
+Группы сбоев: логика / дыры в знаниях / приоритеты / тон / интеграции.
+
+---
+
+## Phase 2 — Architecture
 
 ```text
 skill-name/
 ├── SKILL.md
 ├── prompt.md
-├── prompt-*.md
+├── prompt-suvvy-paste.md    # в Instructions Suvvy
 ├── files-map.md
-├── sources/
-└── suvvy-qa/
+├── sources/                 # править здесь
+│   ├── qualification-*.md
+│   ├── pricing-*.md
+│   ├── scenario-playbooks.md
+│   ├── chat-only-mode.md
+│   ├── hard-bans.md
+│   ├── crm-handoff.md       # или bitrix-funnel-stage.md
+│   ├── notification-telegram.md
+│   └── tables / csv
+└── suvvy-qa/                # вставка в «Вопрос — ответ»
+    ├── wrap_sources.py
+    └── *.md
 ```
 
-### Phase 3 — Implementation
+Оркестрация в промпте. Факты в `sources/*`. Ситуация → файл → DQ в `files-map.md`.
 
-1. Оркестрация — в `prompt.md`.
-2. Факты — в `sources/*`.
-3. Карта ситуаций — в `files-map.md`.
-4. Direct Questions — в `suvvy-qa/*` с точными заголовками.
-5. Живые данные — в таблицах, не в прозе промпта.
-6. Повторяющиеся ошибки — в bans / playbooks.
+---
 
-## Поведение бота-продавца
+## Phase 3 — Реализация
 
-1. Сначала ответ, потом квалификация.
-2. Не выдумывать цены, сроки, скидки, гарантии, остатки.
-3. Только утверждённые источники и таблицы.
-4. Спрашивать только недостающие факты.
-5. Квалифицированный лид → CRM/handoff, диалог продолжается, пока не подключится менеджер.
-6. Chat-only — без давления на звонок.
+1. Собрать/обновить `prompt-suvvy-paste.md` с секциями Suvvy: `#ROLE` `#GOALS` `#GREETING` `#RESPONSE LANGUAGE` `#RESPONSE STYLE` `#LOGIC` `#WORKING WITH FUNCTIONS` `#RESTRICTIONS` `#IMPORTANT`.
+2. В `#WORKING WITH FUNCTIONS` прописать **когда** вызывать каждый `get_file_text("…")` и таблицы.
+3. Синхронизировать `sources/*` → `suvvy-qa/*` (скрипт wrap).
+4. Живые остатки/прайс — CSV UTF-8 **без BOM**, поиск по токену из **всего чата**, колонка `search_text` + алиасы.
+5. Каждый повторный сбой из чатов → явный ban в `hard-bans.md` **и** в `#RESTRICTIONS`.
 
-## Универсальные правила
+Детали: [prompt-pack.md](references/prompt-pack.md), [suvvy-platform.md](references/suvvy-platform.md).
 
-- Весь контекст переписки.
-- Не переспрашивать уже сказанное.
-- Отличать цену изделия и цену материала.
-- Сначала ценность, потом телефон.
-- Lookup vs handoff менеджеру.
-- Наличие: токен → колонки поиска → fallback → эскалация.
-- CRM: точные триггеры, один раз за диалог, что делать после вызова.
+---
 
-## Минимум источников
+## Phase 4 — Деплой Suvvy (чеклист)
 
-- scope услуг/товаров
-- pricing / estimate
-- qualification
-- availability / coverage
-- FAQ / процесс
-- objections
-- CRM handoff
-- notifications
-- hard bans
+1. [app.suvvy.ai](https://app.suvvy.ai/) → **Instructions** ← тело `prompt-suvvy-paste.md` (заголовки ROLE/GOALS можно адаптировать под UI, **правила не резать**).
+2. **База знаний → Вопрос — ответ** ← `suvvy-qa/*` или Excel. Тумблеры **вкл**. Заголовки = вызовы в промпте. Держать блок **тонким** (ориентир **< ~50** записей).
+3. Таблица(и): одна CSV, при необходимости **два имени функции** (primary + fallback), описание поиска в UI, LIKE без регистра.
+4. CRM: либо Integrations на DQ (смена статуса + оператор), либо LLM-действие с описанием «когда вызывать»; ID сущности — **шестерёнка**, не руками.
+5. Temperature **0–0.3**.
+6. Follow-ups / дожимы — **не** в этом боте (отдельное приложение). Не обещать напоминания.
+7. Прогнать регрессии из [failure-patterns.md](references/failure-patterns.md).
+
+---
+
+## Универсальное поведение бота
+
+Полная логика: [seller-logic.md](references/seller-logic.md).
+
+Кратко:
+
+1. **Ценность первой.** Ответ на вопрос → потом квалификация / soft call.
+2. **Весь диалог.** Размеры, товар, телефон могут быть в разных сообщениях.
+3. **Не телефон вместо ответа** (цена, наличие, адрес, «как считается»).
+4. Soft call: сначала «удобно созвониться?», номер — после «да» или если уже прислали. **Не спрашивать номер повторно.**
+5. Chat-only («пишите здесь», «без звонка», «на авито») — без давления на звонок.
+6. Квалификация: large → CRM **сразу** (структурно дорогой заказ); medium/small → мягкий чек «от X» → CRM на согласие.
+7. После CRM **продолжать** квалифицировать. Клиенту не говорить про воронку/CRM.
+8. Не дублировать одно и то же за ход. Не обрывать диалог корпоративным шаблоном без следующего вопроса.
+9. ≤5 уточняющих вопросов за диалог; ≤2 связанных в одном сообщении; уже отвеченное не повторять.
+10. Ярлыки «крупный/средний заказ» — **только внутри**, клиенту не озвучивать.
+
+---
+
+## Минимум источников (адаптировать под нишу)
+
+- qualification / scale
+- pricing factors (что входит в «от»)
+- catalog / scope / out-of-scope
+- availability / stock / coverage / address
+- scenario playbooks
+- chat-only
+- CRM / funnel
+- notification (TG)
+- hard-bans
+- follow-ups-reference (**не** грузить в бота)
+
+---
 
 ## Deliverables
 
-### A) Brief / TZ
+A) ТЗ — [brief-template.md](references/brief-template.md)  
+B) Production pack + чеклист деплоя  
+C) Список регрессий из живых чатов
 
-```markdown
-# AI Seller Brief
-
-## Business Context
-## Main User Intents
-## Qualification Logic
-## Pricing Logic
-## Data Sources
-## CRM / Handoff Logic
-## Must-Fix Failures
-## Forbidden Behaviors
-## Files To Create Or Update
-```
-
-### B) Production pack
-
-`SKILL.md`, `prompt.md`, `files-map.md`, `sources/*`, `suvvy-qa/*`
-
-## Maintenance
-
-- Оркестрация в `prompt.md`, факты в `sources/*`.
-- Заголовки Direct Questions в Suvvy — точные.
-- Повторный сбой в чатах → явный ban или сценарий.
-- Не патчить промпт в обход source-of-truth.
-
-Нишевые скиллы (например Ein-Stein) не дублируют этот мастер: мастер аудирует и правит их структуру.
+Нишевый скилл (Ein-Stein и т.п.) **не заменять** этим мастером: мастер его **аудирует и расширяет**.
