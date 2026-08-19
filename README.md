@@ -1,31 +1,34 @@
 # Cursor Agent Skills
 
-Скилы для Cursor Agent.
+Публичные скиллы для Cursor Agent.
 
 ## Установка
 
 ```bash
 git clone https://github.com/abramovmarketing88-byte/cursor-skills.git
-cp -r cursor-skills/landing-audit cursor-skills/ui-design-review cursor-skills/selling-landing cursor-skills/avito-factory ~/.cursor/skills/
+cp -r cursor-skills/ai-seller-master cursor-skills/landing-audit cursor-skills/ui-design-review cursor-skills/selling-landing cursor-skills/avito-factory ~/.cursor/skills/
 ```
 
-В Agent: `/landing-audit`, `/ui-design-review`, `/selling-landing` или `/avito-factory`.
+В Agent: `/ai-seller-master`, `/landing-audit`, `/ui-design-review`, `/selling-landing` или `/avito-factory`.
 
 ## Skills
 
+### [ai-seller-master](./ai-seller-master/)
+
+Мастер-скилл ИИ-продавца: анализ переписок и логов → ТЗ → production-скилл (prompt, files-map, sources, Direct Questions, CRM/Suvvy). Без выдуманных цен и остатков.
+
 ### [landing-audit](./landing-audit/)
 
-Полный аудит лендинга (чек-лист 1–75, hero/оффер/CTA/форма, 15 модулей) → автофиксы или вопросы → повторный прогон.
+Аудит лендинга и правки под конверсию.
 
 ### [ui-design-review](./ui-design-review/)
 
-Аудит и улучшение HTML/CSS дизайна: эстетика, UX, типографика, иерархия — затем правки.
+Аудит и правки HTML/CSS макетов.
 
 ### [selling-landing](./selling-landing/)
 
-Создание продающего лендинга по 12-этапному процессу: ЦА, конкуренты, оффер, структура, копирайт, дизайн, вёрстка.
+Продающий лендинг по 12-блочной структуре.
 
 ### [avito-factory](./avito-factory/)
 
-Полный пайплайн массовых объявлений для Авито: бриф → ЦА → креативы → объявления → аудит → спинтекст → CSV (Title, Description, Address). Примеры выходов, скрипты, пресеты гео, промпты для обложек.
-
+Конвейер объявлений Авито: бриф → тексты → аудит → CSV.
